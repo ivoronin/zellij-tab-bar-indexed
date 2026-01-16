@@ -14,13 +14,17 @@ This feature is proposed upstream in [zellij-org/zellij#4606](https://github.com
 
 ## Installation
 
-Add the plugin alias to your config (`~/.config/zellij/config.kdl`):
+In your config (`~/.config/zellij/config.kdl`), find the `plugins` block and replace the `tab-bar` line:
 
 ```kdl
 plugins {
+    // Replace this:
+    // tab-bar location="zellij:tab-bar"
+    // With this:
     tab-bar location="https://github.com/ivoronin/zellij-tab-bar-indexed/releases/latest/download/tab-bar.wasm" {
         show_tab_indices true
     }
+    // ... other plugins
 }
 ```
 
