@@ -34,8 +34,9 @@ On first launch, the plugin requests permission to read application state (requi
 
 1. Start zellij
 2. Press `Ctrl+p` (pane mode)
-3. Press `k` to focus the tab-bar pane
-4. Press `y` to grant permission
+3. Press `k` to move to the tab-bar pane
+4. Press `Enter` to focus it
+5. Press `y` to grant permission
 
 Permission persists for future sessions.
 
