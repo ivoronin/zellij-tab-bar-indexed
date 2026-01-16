@@ -40,7 +40,6 @@ Permission persists for future sessions.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `show_tab_indices` | bool | `false` | Show `<1>`, `<2>`, etc. in tab labels |
-| `hide_swap_layout_indication` | bool | `false` | Hide swap layout indicator |
 
 ## Building from Source
 
