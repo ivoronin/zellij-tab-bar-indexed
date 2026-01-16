@@ -50,8 +50,9 @@ impl ZellijPlugin for State {
             .map(|s| s == "true")
             .unwrap_or(false);
         // Request permission to read application state (needed for tab/mode updates)
+        // NOTE: Don't call set_selectable(false) here - we need to remain selectable
+        // so the user can focus this pane and grant permission
         request_permission(&[PermissionType::ReadApplicationState]);
-        set_selectable(false);
         subscribe(&[
             EventType::TabUpdate,
             EventType::ModeUpdate,
@@ -84,6 +85,8 @@ impl ZellijPlugin for State {
                 }
             },
             Event::PermissionRequestResult(PermissionStatus::Granted) => {
+                // Now that permission is granted, make pane non-selectable (normal tab-bar behavior)
+                set_selectable(false);
                 // Re-subscribe to events after permission is granted
                 subscribe(&[
                     EventType::TabUpdate,
