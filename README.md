@@ -16,7 +16,7 @@ Add to your layout (`~/.config/zellij/layouts/default.kdl`):
 layout {
     default_tab_template {
         pane size=1 borderless=true {
-            plugin location="https://github.com/ivoronin/zellij-tab-bar-indexed/releases/latest/download/tab_bar.wasm" {
+            plugin location="https://github.com/ivoronin/zellij-tab-bar-indexed/releases/latest/download/tab-bar.wasm" {
                 show_tab_indices true
             }
         }

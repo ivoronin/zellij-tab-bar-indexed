@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tab-bar.wasm
-          path: target/wasm32-wasip1/release/tab_bar.wasm
+          path: target/wasm32-wasip1/release/tab-bar.wasm
           if-no-files-found: error
 
   release:
@@ -49,12 +49,12 @@ jobs:
           name: tab-bar.wasm
 
       - name: Create checksum
-        run: sha256sum tab_bar.wasm > tab_bar.wasm.sha256sum
+        run: sha256sum tab-bar.wasm > tab-bar.wasm.sha256sum
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            tab_bar.wasm
-            tab_bar.wasm.sha256sum
+            tab-bar.wasm
+            tab-bar.wasm.sha256sum
           generate_release_notes: true
