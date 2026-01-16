@@ -49,11 +49,14 @@ impl ZellijPlugin for State {
             .get("show_tab_indices")
             .map(|s| s == "true")
             .unwrap_or(false);
+        // Request permission to read application state (needed for tab/mode updates)
+        request_permission(&[PermissionType::ReadApplicationState]);
         set_selectable(false);
         subscribe(&[
             EventType::TabUpdate,
             EventType::ModeUpdate,
             EventType::Mouse,
+            EventType::PermissionRequestResult,
         ]);
     }
 
@@ -79,6 +82,18 @@ impl ZellijPlugin for State {
                 } else {
                     eprintln!("Could not find active tab.");
                 }
+            },
+            Event::PermissionRequestResult(PermissionStatus::Granted) => {
+                // Re-subscribe to events after permission is granted
+                subscribe(&[
+                    EventType::TabUpdate,
+                    EventType::ModeUpdate,
+                    EventType::Mouse,
+                ]);
+                should_render = true;
+            },
+            Event::PermissionRequestResult(PermissionStatus::Denied) => {
+                eprintln!("Permission denied - tab bar will not function properly");
             },
             Event::Mouse(me) => match me {
                 Mouse::LeftClick(_, col) => {
