@@ -29,23 +29,18 @@ jobs:
       - name: Build plugins
         run: cargo build --release --target wasm32-wasip1
 
-      - name: Rename plugins for release
-        run: |
-          cp target/wasm32-wasip1/release/tab_bar.wasm tab-bar.wasm
-          cp target/wasm32-wasip1/release/compact_bar.wasm compact-bar.wasm
-
       - name: Upload tab-bar artifact
         uses: actions/upload-artifact@v4
         with:
           name: tab-bar.wasm
-          path: tab-bar.wasm
+          path: target/wasm32-wasip1/release/tab-bar.wasm
           if-no-files-found: error
 
       - name: Upload compact-bar artifact
         uses: actions/upload-artifact@v4
         with:
           name: compact-bar.wasm
-          path: compact-bar.wasm
+          path: target/wasm32-wasip1/release/compact-bar.wasm
           if-no-files-found: error
 
   release:

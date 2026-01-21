@@ -10,9 +10,6 @@ license = "MIT"
 description = "Compact-bar plugin for Zellij with optional tab indices"
 repository = "https://github.com/ivoronin/zellij-tab-bar-indexed"
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
 colored = "2"
 ansi_term = "0.12"
