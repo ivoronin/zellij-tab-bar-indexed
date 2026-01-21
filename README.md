@@ -53,19 +53,25 @@ plugins {
 }
 ```
 
-### First Run - Grant Permission (tab-bar only)
+### First Run - Grant Permission
 
-On first launch, the tab-bar plugin requests permission to read application state:
+On first launch, the plugins request permission to read application state:
 
+**For tab-bar (top of screen):**
 1. Start zellij
 2. Press `Ctrl+p` (pane mode)
 3. Press `k` to move up to the tab-bar pane
 4. Press `Enter` to focus it
 5. Press `y` to grant permission
 
-Permission persists for future sessions.
+**For compact-bar (bottom of screen):**
+1. Start zellij
+2. Press `Ctrl+p` (pane mode)
+3. Press `j` to move down to the compact-bar pane
+4. Press `Enter` to focus it
+5. Press `y` to grant permission
 
-**Note:** The compact-bar plugin does not require permission granting.
+Permission persists for future sessions.
 
 ## Configuration
 

@@ -97,6 +97,7 @@ impl ZellijPlugin for State {
             },
             Event::PermissionRequestResult(PermissionStatus::Denied) => {
                 eprintln!("Permission denied - tab bar will not function properly");
+                // should_render stays false
             },
             Event::Mouse(me) => match me {
                 Mouse::LeftClick(_, col) => {

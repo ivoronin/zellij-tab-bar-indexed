@@ -98,6 +98,17 @@ impl ZellijPlugin for State {
             },
             Event::SystemClipboardFailure => self.handle_clipboard_failure(),
             Event::InputReceived => self.handle_input_received(),
+            Event::PermissionRequestResult(PermissionStatus::Granted) => {
+                // Now that permission is granted, make pane non-selectable (normal bar behavior)
+                set_selectable(false);
+                // Re-subscribe to events after permission is granted
+                self.resubscribe_events();
+                true
+            },
+            Event::PermissionRequestResult(PermissionStatus::Denied) => {
+                eprintln!("Permission denied - compact bar will not function properly");
+                false
+            },
             _ => false,
         }
     }
@@ -145,12 +156,15 @@ impl State {
     }
 
     fn setup_subscriptions(&self) {
-        set_selectable(false);
-
-        let events = if self.is_tooltip {
-            vec![EventType::ModeUpdate, EventType::TabUpdate]
+        if self.is_tooltip {
+            set_selectable(false);
+            subscribe(&[EventType::ModeUpdate, EventType::TabUpdate]);
         } else {
-            vec![
+            // Request permission to read application state (needed for tab/mode updates)
+            // NOTE: Don't call set_selectable(false) here - we need to remain selectable
+            // so the user can focus this pane and grant permission
+            request_permission(&[PermissionType::ReadApplicationState]);
+            subscribe(&[
                 EventType::TabUpdate,
                 EventType::PaneUpdate,
                 EventType::ModeUpdate,
@@ -158,10 +172,21 @@ impl State {
                 EventType::CopyToClipboard,
                 EventType::InputReceived,
                 EventType::SystemClipboardFailure,
-            ]
-        };
+                EventType::PermissionRequestResult,
+            ]);
+        }
+    }
 
-        subscribe(&events);
+    fn resubscribe_events(&self) {
+        subscribe(&[
+            EventType::TabUpdate,
+            EventType::PaneUpdate,
+            EventType::ModeUpdate,
+            EventType::Mouse,
+            EventType::CopyToClipboard,
+            EventType::InputReceived,
+            EventType::SystemClipboardFailure,
+        ]);
     }
 
     fn configure_keybinds(&self) {
