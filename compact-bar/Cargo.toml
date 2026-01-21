@@ -1,0 +1,21 @@
+[package]
+name = "compact-bar"
+version = "0.1.0"
+authors = [
+    "Alexander Kenji Berthold <aks.kenji@protonmail.com>",
+    "Ilya Voronin <ivoronin@gmail.com>"
+]
+edition = "2021"
+license = "MIT"
+description = "Compact-bar plugin for Zellij with optional tab indices"
+repository = "https://github.com/ivoronin/zellij-tab-bar-indexed"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+colored = "2"
+ansi_term = "0.12"
+unicode-width = "0.1.8"
+zellij-tile = "0.43"
+zellij-tile-utils = "0.43"
