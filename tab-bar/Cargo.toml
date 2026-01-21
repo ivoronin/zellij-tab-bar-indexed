@@ -16,6 +16,6 @@ crate-type = ["cdylib"]
 [dependencies]
 colored = "2"
 ansi_term = "0.12"
-unicode-width = "0.1.8"
+unicode-width = "0.2.2"
 zellij-tile = "0.43"
 zellij-tile-utils = "0.43"
