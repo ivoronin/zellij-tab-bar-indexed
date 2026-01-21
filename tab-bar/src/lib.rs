@@ -25,7 +25,7 @@ impl LinePart {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 struct State {
     tabs: Vec<TabInfo>,
     active_tab_idx: usize,
@@ -116,11 +116,6 @@ impl ZellijPlugin for State {
             _ => {
                 eprintln!("Got unrecognized event: {:?}", event);
             },
-        }
-        if self.tabs.is_empty() {
-            // no need to render if we have no tabs, this can sometimes happen on startup before we
-            // get the tab update and then we definitely don't want to render
-            should_render = false;
         }
         should_render
     }
