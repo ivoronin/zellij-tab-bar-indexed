@@ -60,6 +60,7 @@ struct State {
     persist: bool,
     is_first_run: bool,
     own_tab_index: Option<usize>,
+    own_plugin_url: Option<String>,  // Store our own plugin URL for tooltip detection
     own_client_id: u16,
 }
 
@@ -269,8 +270,9 @@ impl State {
     fn handle_pane_update(&mut self, pane_manifest: PaneManifest) -> bool {
         if self.toggle_tooltip_key.is_some() {
             let previous_tooltip_state = self.tooltip_is_active;
-            self.tooltip_is_active = self.detect_tooltip_presence(&pane_manifest);
+            // Capture our own URL first, then use it for tooltip detection
             self.own_tab_index = self.find_own_tab_index(&pane_manifest);
+            self.tooltip_is_active = self.detect_tooltip_presence(&pane_manifest);
             previous_tooltip_state != self.tooltip_is_active
         } else {
             false
@@ -347,9 +349,15 @@ impl State {
     }
 
     fn detect_tooltip_presence(&self, pane_manifest: &PaneManifest) -> bool {
+        // Use our own URL if known, fallback to built-in URL
+        let expected_url = self
+            .own_plugin_url
+            .clone()
+            .unwrap_or_else(|| "zellij:compact-bar".to_owned());
+
         for (_tab_index, panes) in &pane_manifest.panes {
             for pane in panes {
-                if pane.plugin_url == Some("zellij:compact-bar".to_owned())
+                if pane.plugin_url == Some(expected_url.clone())
                     && pane.pane_x != pane.pane_content_x
                 {
                     return true;
@@ -359,10 +367,12 @@ impl State {
         false
     }
 
-    fn find_own_tab_index(&self, pane_manifest: &PaneManifest) -> Option<usize> {
+    fn find_own_tab_index(&mut self, pane_manifest: &PaneManifest) -> Option<usize> {
         for (tab_index, panes) in &pane_manifest.panes {
             for pane in panes {
                 if pane.is_plugin && Some(pane.id) == self.own_plugin_id {
+                    // Capture our own URL for tooltip detection
+                    self.own_plugin_url = pane.plugin_url.clone();
                     return Some(*tab_index);
                 }
             }
