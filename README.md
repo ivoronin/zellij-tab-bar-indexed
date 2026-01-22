@@ -79,11 +79,9 @@ Permission persists for future sessions.
 |--------|------|---------|-------------|
 | `show_tab_indices` | bool | `false` | Show `<1>`, `<2>`, etc. in tab labels |
 
-### Compact Bar Additional Options
+### Compact Bar Limitations
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `tooltip` | string | - | Key to toggle the tooltip (e.g., `"?"`) |
+**Note:** The tooltip feature (`tooltip` config option) does not work with file-based plugins due to a Zellij limitation.
 
 ## Building from Source
 
