@@ -60,7 +60,9 @@ struct State {
     persist: bool,
     is_first_run: bool,
     own_tab_index: Option<usize>,
-    own_plugin_url: Option<String>,  // Store our own plugin URL for tooltip detection
+    // FIX: Store own URL for tooltip detection - upstream uses hardcoded "zellij:compact-bar"
+    // which doesn't match file-based plugins (e.g., "file:/path/to/compact-bar.wasm")
+    own_plugin_url: Option<String>,
     own_client_id: u16,
 }
 
@@ -115,6 +117,16 @@ impl ZellijPlugin for State {
     }
 
     fn pipe(&mut self, message: PipeMessage) -> bool {
+        // FIX: Self-configure as tooltip via message name. Upstream uses with_plugin_config()
+        // but Zellij ignores it for file-based plugins (alias config takes precedence).
+        if message.name == MSG_LAUNCH_TOOLTIP && !self.is_tooltip {
+            self.is_tooltip = true;
+            self.is_first_run = true;
+            set_selectable(false);
+            subscribe(&[EventType::ModeUpdate, EventType::TabUpdate]);
+            return true;
+        }
+
         if self.is_tooltip && message.is_private {
             self.handle_tooltip_pipe(message);
         } else if message.name == MSG_TOGGLE_TOOLTIP
@@ -164,7 +176,11 @@ impl State {
             // Request permission to read application state (needed for tab/mode updates)
             // NOTE: Don't call set_selectable(false) here - we need to remain selectable
             // so the user can focus this pane and grant permission
-            request_permission(&[PermissionType::ReadApplicationState]);
+            // FIX: MessageAndLaunchOtherPlugins needed to launch tooltip via pipe_message_to_plugin
+            request_permission(&[
+                PermissionType::ReadApplicationState,
+                PermissionType::MessageAndLaunchOtherPlugins,
+            ]);
             subscribe(&[
                 EventType::TabUpdate,
                 EventType::PaneUpdate,
@@ -270,7 +286,7 @@ impl State {
     fn handle_pane_update(&mut self, pane_manifest: PaneManifest) -> bool {
         if self.toggle_tooltip_key.is_some() {
             let previous_tooltip_state = self.tooltip_is_active;
-            // Capture our own URL first, then use it for tooltip detection
+            // FIX: find_own_tab_index must run first to capture own_plugin_url before detect_tooltip_presence uses it
             self.own_tab_index = self.find_own_tab_index(&pane_manifest);
             self.tooltip_is_active = self.detect_tooltip_presence(&pane_manifest);
             previous_tooltip_state != self.tooltip_is_active
@@ -349,12 +365,9 @@ impl State {
     }
 
     fn detect_tooltip_presence(&self, pane_manifest: &PaneManifest) -> bool {
-        // Use our own URL if known, fallback to built-in URL
-        let expected_url = self
-            .own_plugin_url
-            .clone()
+        // FIX: Use dynamically captured URL instead of hardcoded "zellij:compact-bar"
+        let expected_url = self.own_plugin_url.clone()
             .unwrap_or_else(|| "zellij:compact-bar".to_owned());
-
         for (_tab_index, panes) in &pane_manifest.panes {
             for pane in panes {
                 if pane.plugin_url == Some(expected_url.clone())
@@ -367,11 +380,12 @@ impl State {
         false
     }
 
+    // FIX: Changed from &self to &mut self to capture own_plugin_url
     fn find_own_tab_index(&mut self, pane_manifest: &PaneManifest) -> Option<usize> {
         for (tab_index, panes) in &pane_manifest.panes {
             for pane in panes {
                 if pane.is_plugin && Some(pane.id) == self.own_plugin_id {
-                    // Capture our own URL for tooltip detection
+                    // FIX: Capture URL for detect_tooltip_presence (supports file-based plugins)
                     self.own_plugin_url = pane.plugin_url.clone();
                     return Some(*tab_index);
                 }
@@ -429,13 +443,11 @@ impl State {
         pipe_message_to_plugin(message);
     }
 
+    // FIX: Removed with_plugin_config() - Zellij ignores it for file-based plugins.
+    // Tooltip now self-configures via message name check in pipe() handler.
     fn create_tooltip_message(&self, name: &str, mode: InputMode) -> MessageToPlugin {
-        let mut tooltip_config = self.config.clone();
-        tooltip_config.insert(CONFIG_IS_TOOLTIP.to_string(), "true".to_string());
-
         MessageToPlugin::new(name)
             .with_plugin_url("zellij:OWN_URL")
-            .with_plugin_config(tooltip_config)
             .with_floating_pane_coordinates(self.calculate_tooltip_coordinates())
             .new_plugin_instance_should_have_pane_title(format!("{:?}", mode))
     }
