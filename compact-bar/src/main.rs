@@ -163,7 +163,10 @@ impl State {
             // Request permission to read application state (needed for tab/mode updates)
             // NOTE: Don't call set_selectable(false) here - we need to remain selectable
             // so the user can focus this pane and grant permission
-            request_permission(&[PermissionType::ReadApplicationState]);
+            request_permission(&[
+                PermissionType::ReadApplicationState,
+                PermissionType::ChangeApplicationState,
+            ]);
             subscribe(&[
                 EventType::TabUpdate,
                 EventType::PaneUpdate,
