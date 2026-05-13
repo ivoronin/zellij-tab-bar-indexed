@@ -2,3 +2,4 @@
 Cargo.lock
 *.wasm
 .DS_Store
+.claude/settings.local.json
