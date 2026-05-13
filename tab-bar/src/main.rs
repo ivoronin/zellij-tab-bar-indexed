@@ -33,6 +33,7 @@ struct State {
     tab_line: Vec<LinePart>,
     hide_swap_layout_indication: bool,
     show_tab_indices: bool,
+    cached_keybinds: KeybindsVec,
 }
 
 static ARROW_SEPARATOR: &str = "";
@@ -61,13 +62,26 @@ impl ZellijPlugin for State {
             EventType::ModeUpdate,
             EventType::Mouse,
             EventType::PermissionRequestResult,
+            EventType::InitialKeybinds,
         ]);
     }
 
     fn update(&mut self, event: Event) -> bool {
         let mut should_render = false;
         match event {
-            Event::ModeUpdate(mode_info) => {
+            Event::InitialKeybinds(keybinds) => {
+                self.cached_keybinds = keybinds;
+                if !self.cached_keybinds.is_empty() {
+                    self.mode_info.keybinds = self.cached_keybinds.clone();
+                }
+                should_render = true;
+            },
+            Event::ModeUpdate(mut mode_info) => {
+                if mode_info.keybinds.is_empty() && !self.cached_keybinds.is_empty() {
+                    mode_info.keybinds = self.cached_keybinds.clone();
+                } else if !mode_info.keybinds.is_empty() {
+                    self.cached_keybinds = mode_info.keybinds.clone();
+                }
                 if self.mode_info != mode_info {
                     should_render = true;
                 }
@@ -87,21 +101,6 @@ impl ZellijPlugin for State {
                     eprintln!("Could not find active tab.");
                 }
             },
-            Event::PermissionRequestResult(PermissionStatus::Granted) => {
-                // Now that permission is granted, make pane non-selectable (normal tab-bar behavior)
-                set_selectable(false);
-                // Re-subscribe to events after permission is granted
-                subscribe(&[
-                    EventType::TabUpdate,
-                    EventType::ModeUpdate,
-                    EventType::Mouse,
-                ]);
-                should_render = true;
-            },
-            Event::PermissionRequestResult(PermissionStatus::Denied) => {
-                eprintln!("Permission denied - tab bar will not function properly");
-                // should_render stays false
-            },
             Event::Mouse(me) => match me {
                 Mouse::LeftClick(_, col) => {
                     let tab_to_focus = get_tab_to_focus(&self.tab_line, self.active_tab_idx, col);
@@ -116,6 +115,21 @@ impl ZellijPlugin for State {
                     switch_tab_to(max(self.active_tab_idx.saturating_sub(1), 1) as u32);
                 },
                 _ => {},
+            },
+            Event::PermissionRequestResult(PermissionStatus::Granted) => {
+                // Now that permission is granted, make pane non-selectable (normal tab-bar behavior)
+                set_selectable(false);
+                // Re-subscribe to events after permission is granted
+                subscribe(&[
+                    EventType::TabUpdate,
+                    EventType::ModeUpdate,
+                    EventType::Mouse,
+                    EventType::InitialKeybinds,
+                ]);
+                should_render = true;
+            },
+            Event::PermissionRequestResult(PermissionStatus::Denied) => {
+                eprintln!("Permission denied - tab bar will not function properly");
             },
             _ => {
                 eprintln!("Got unrecognized event: {:?}", event);

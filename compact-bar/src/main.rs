@@ -61,6 +61,9 @@ struct State {
     is_first_run: bool,
     own_tab_index: Option<usize>,
     own_client_id: u16,
+
+    // Keybinding cache
+    cached_keybinds: KeybindsVec,
 }
 
 struct TabRenderData {
@@ -86,7 +89,21 @@ impl ZellijPlugin for State {
         self.is_first_run = false;
 
         match event {
-            Event::ModeUpdate(mode_info) => self.handle_mode_update(mode_info),
+            Event::InitialKeybinds(keybinds) => {
+                self.cached_keybinds = keybinds;
+                if !self.cached_keybinds.is_empty() {
+                    self.mode_info.keybinds = self.cached_keybinds.clone();
+                }
+                true
+            },
+            Event::ModeUpdate(mut mode_info) => {
+                if mode_info.keybinds.is_empty() && !self.cached_keybinds.is_empty() {
+                    mode_info.keybinds = self.cached_keybinds.clone();
+                } else if !mode_info.keybinds.is_empty() {
+                    self.cached_keybinds = mode_info.keybinds.clone();
+                }
+                self.handle_mode_update(mode_info)
+            },
             Event::TabUpdate(tabs) => self.handle_tab_update(tabs),
             Event::PaneUpdate(pane_manifest) => self.handle_pane_update(pane_manifest),
             Event::Mouse(mouse_event) => {
@@ -158,7 +175,11 @@ impl State {
     fn setup_subscriptions(&self) {
         if self.is_tooltip {
             set_selectable(false);
-            subscribe(&[EventType::ModeUpdate, EventType::TabUpdate]);
+            subscribe(&[
+                EventType::ModeUpdate,
+                EventType::TabUpdate,
+                EventType::InitialKeybinds,
+            ]);
         } else {
             // Request permission to read application state (needed for tab/mode updates)
             // NOTE: Don't call set_selectable(false) here - we need to remain selectable
@@ -176,6 +197,7 @@ impl State {
                 EventType::InputReceived,
                 EventType::SystemClipboardFailure,
                 EventType::PermissionRequestResult,
+                EventType::InitialKeybinds,
             ]);
         }
     }
@@ -189,6 +211,7 @@ impl State {
             EventType::CopyToClipboard,
             EventType::InputReceived,
             EventType::SystemClipboardFailure,
+            EventType::InitialKeybinds,
         ]);
     }
 
