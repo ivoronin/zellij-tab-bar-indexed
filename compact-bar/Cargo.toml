@@ -13,6 +13,6 @@ repository = "https://github.com/ivoronin/zellij-tab-bar-indexed"
 [dependencies]
 colored = "2"
 ansi_term = "0.12"
-unicode-width = "0.1.8"
+unicode-width = "0.2.3"
 zellij-tile = "0.44"
 zellij-tile-utils = "0.44"
